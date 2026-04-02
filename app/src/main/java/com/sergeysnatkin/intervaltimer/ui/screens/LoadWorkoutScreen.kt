@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -103,7 +103,9 @@ fun LoadWorkoutScreen(
                 OutlinedButton(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
+                        .height(52.dp)
+                        .alpha(0.7f),
+                    enabled = false,
                     onClick = {},
                     shape = RoundedCornerShape(12.dp),
                     border = androidx.compose.foundation.BorderStroke(1.5.dp, AppColors.Primary),
@@ -113,27 +115,22 @@ fun LoadWorkoutScreen(
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp),
                 ) {
-                    Box(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            modifier = Modifier.wrapContentWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = AppColors.Primary,
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                "Загрузка…",
-                                color = AppColors.Primary,
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                        }
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = AppColors.Primary,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            "Загрузка…",
+                            color = AppColors.Primary,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
                     }
                 }
             } else {

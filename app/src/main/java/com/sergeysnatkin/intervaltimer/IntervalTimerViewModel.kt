@@ -58,12 +58,13 @@ class IntervalTimerViewModel(
         Context.MODE_PRIVATE,
     )
 
-    private val _uiState = MutableStateFlow(restoreUiState())
+    private val restoredState = restoreState()
+    private val _uiState = MutableStateFlow(restoredState.uiState)
     val uiState: StateFlow<IntervalTimerUiState> = _uiState.asStateFlow()
 
-    private var session: IntervalTimerSession? = restoreSession(_uiState.value.workout)
+    private var session: IntervalTimerSession? = restoredState.session
     private var tickerJob: Job? = null
-    private var lastSnapshot: TimerSnapshot? = _uiState.value.timerSnapshot
+    private var lastSnapshot: TimerSnapshot? = restoredState.uiState.timerSnapshot
 
     init {
         refreshFromClock(playSignals = false)
@@ -255,50 +256,23 @@ class IntervalTimerViewModel(
         persistState()
     }
 
-    private fun restoreUiState(): IntervalTimerUiState {
-        val workout = readStoredWorkout()
-        val status = readStoredTimerStatus()
-
-        return IntervalTimerUiState(
-            workoutIdInput = readString(KEY_INPUT_ID).orEmpty().ifBlank {
-                IntervalTimerUiState.DEFAULT_WORKOUT_ID
-            },
-            workout = workout,
-            timerStatus = status,
-            timerSnapshot = workout?.let {
-                reducer.calculate(
-                    workout = it,
-                    status = status,
-                    elapsedMillis = readLong(KEY_ACCUMULATED_ELAPSED),
-                )
-            },
-        )
-    }
-
-    private fun restoreSession(workout: Workout?): IntervalTimerSession? {
-        if (workout == null) return null
-
-        return IntervalTimerSession(
-            workout = workout,
-            status = readStoredTimerStatus(),
-            accumulatedElapsedMillis = readLong(KEY_ACCUMULATED_ELAPSED),
-            runningSinceMillis = readNullableLong(KEY_RUNNING_SINCE),
-        )
-    }
-
     private fun persistState() {
         val state = _uiState.value
+        val workoutJson = state.workout?.let(json::encodeToString)
+        val timerStatus = session?.status?.name
+        val accumulatedElapsed = session?.accumulatedElapsedMillis ?: 0L
+        val runningSince = session?.runningSinceMillis
+
         // SavedStateHandle covers configuration changes, SharedPreferences keeps the timer alive after process death.
         savedStateHandle[KEY_INPUT_ID] = state.workoutIdInput
-        savedStateHandle[KEY_WORKOUT_JSON] = state.workout?.let(json::encodeToString)
-        savedStateHandle[KEY_TIMER_STATUS] = session?.status?.name
-        savedStateHandle[KEY_ACCUMULATED_ELAPSED] = session?.accumulatedElapsedMillis ?: 0L
-        savedStateHandle[KEY_RUNNING_SINCE] = session?.runningSinceMillis
+        savedStateHandle[KEY_WORKOUT_JSON] = workoutJson
+        savedStateHandle[KEY_TIMER_STATUS] = timerStatus
+        savedStateHandle[KEY_ACCUMULATED_ELAPSED] = accumulatedElapsed
+        savedStateHandle[KEY_RUNNING_SINCE] = runningSince
 
         preferences.edit().apply {
             putString(KEY_INPUT_ID, state.workoutIdInput)
 
-            val workoutJson = state.workout?.let(json::encodeToString)
             if (workoutJson == null) {
                 remove(KEY_WORKOUT_JSON)
                 remove(KEY_TIMER_STATUS)
@@ -306,9 +280,8 @@ class IntervalTimerViewModel(
                 remove(KEY_ACCUMULATED_ELAPSED)
             } else {
                 putString(KEY_WORKOUT_JSON, workoutJson)
-                putString(KEY_TIMER_STATUS, session?.status?.name)
-                putLong(KEY_ACCUMULATED_ELAPSED, session?.accumulatedElapsedMillis ?: 0L)
-                val runningSince = session?.runningSinceMillis
+                putString(KEY_TIMER_STATUS, timerStatus)
+                putLong(KEY_ACCUMULATED_ELAPSED, accumulatedElapsed)
                 if (runningSince == null) {
                     remove(KEY_RUNNING_SINCE)
                 } else {
@@ -319,6 +292,38 @@ class IntervalTimerViewModel(
     }
 
     private fun now(): Long = SystemClock.elapsedRealtime()
+
+    private fun restoreState(): RestoredState {
+        val workoutIdInput = readString(KEY_INPUT_ID).orEmpty().ifBlank {
+            IntervalTimerUiState.DEFAULT_WORKOUT_ID
+        }
+        val workout = readStoredWorkout()
+        val status = readStoredTimerStatus()
+        val accumulatedElapsed = readLong(KEY_ACCUMULATED_ELAPSED)
+        val runningSince = readNullableLong(KEY_RUNNING_SINCE)
+
+        val uiState = IntervalTimerUiState(
+            workoutIdInput = workoutIdInput,
+            workout = workout,
+            timerStatus = status,
+            timerSnapshot = workout?.let {
+                reducer.calculate(
+                    workout = it,
+                    status = status,
+                    elapsedMillis = accumulatedElapsed,
+                )
+            },
+        )
+        val session = workout?.let {
+            IntervalTimerSession(
+                workout = it,
+                status = status,
+                accumulatedElapsedMillis = accumulatedElapsed,
+                runningSinceMillis = runningSince,
+            )
+        }
+        return RestoredState(uiState = uiState, session = session)
+    }
 
     private fun readStoredWorkout(): Workout? {
         val workoutJson = readString(KEY_WORKOUT_JSON)?.takeIf(String::isNotBlank) ?: return null
@@ -394,4 +399,9 @@ class IntervalTimerViewModel(
         const val TICK_INTERVAL_MS = 200L
         const val PREFERENCES_NAME = "interval_timer_state"
     }
+
+    private data class RestoredState(
+        val uiState: IntervalTimerUiState,
+        val session: IntervalTimerSession?,
+    )
 }
