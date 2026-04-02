@@ -1,25 +1,26 @@
 # sergey-snatkin-interval-timer
 
-Небольшое Android-приложение на Kotlin + Jetpack Compose для загрузки и проигрывания интервальной тренировки по API.
+[Русская версия](README.ru.md)
 
-## Что реализовано
-- экран загрузки тренировки по ID с состояниями idle/loading/error
-- экран тренировки с idle/running/paused/completed состояниями
-- последовательное проигрывание интервалов
-- пауза, продолжение и сброс тренировки
-- звуковые сигналы на старт, переходы между интервалами и завершение
-- сохранение прогресса таймера при сворачивании и повторном открытии приложения
-- debug APK и unit-тест для расчета снапшота таймера
+An Android interval timer app built with Kotlin and Jetpack Compose.
 
-## Сборка
+## What it does
+- loads a workout by ID from the API
+- shows loading, error, idle, running, paused, and completed states
+- plays workout intervals sequentially
+- supports pause, resume, and reset
+- plays sound cues at the start, between intervals, and at the end
+- keeps timer progress after the app is backgrounded and restored
+
+## Build
 ```powershell
 $env:JAVA_HOME='C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot'
 .\gradlew.bat assembleDebug
 ```
 
-## APK
-Готовый debug APK после сборки:
+## Debug APK
+After building, the APK is available at:
 `app/build/outputs/apk/debug/app-debug.apk`
 
-## Пакет приложения
+## Package name
 `com.sergeysnatkin.intervaltimer`

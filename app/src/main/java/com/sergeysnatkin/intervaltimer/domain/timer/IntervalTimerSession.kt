@@ -1,15 +1,9 @@
 package com.sergeysnatkin.intervaltimer.domain.timer
 
-import com.sergeysnatkin.intervaltimer.domain.model.WorkoutTimer
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
 
-/**
- * Immutable session that can be safely reduced inside a ViewModel.
- *
- * It keeps the accumulated elapsed time separate from the current running segment,
- * so the UI can survive pauses, resumes, and process recreation more easily.
- */
 data class IntervalTimerSession(
-    val workout: WorkoutTimer,
+    val workout: Workout,
     val status: TimerStatus = TimerStatus.Idle,
     val accumulatedElapsedMillis: Long = 0L,
     val runningSinceMillis: Long? = null,
@@ -91,6 +85,7 @@ data class IntervalTimerSession(
 
     private fun computeRunningElapsed(nowMillis: Long): Long {
         val start = runningSinceMillis ?: return accumulatedElapsedMillis
+        // Keep finished time and add only the current uninterrupted running segment.
         return (accumulatedElapsedMillis + (nowMillis - start)).coerceAtLeast(0L)
     }
 

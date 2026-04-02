@@ -4,7 +4,7 @@ import com.sergeysnatkin.intervaltimer.data.AppResult
 import com.sergeysnatkin.intervaltimer.data.WorkoutApiService
 import com.sergeysnatkin.intervaltimer.data.WorkoutRepository
 import com.sergeysnatkin.intervaltimer.data.mapper.toWorkout
-import com.sergeysnatkin.intervaltimer.model.Workout
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
 import retrofit2.HttpException
 import java.io.IOException
 

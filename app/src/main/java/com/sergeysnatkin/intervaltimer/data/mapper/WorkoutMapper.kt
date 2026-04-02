@@ -1,8 +1,8 @@
 package com.sergeysnatkin.intervaltimer.data.mapper
 
 import com.sergeysnatkin.intervaltimer.data.dto.IntervalTimerResponseDto
-import com.sergeysnatkin.intervaltimer.model.Workout
-import com.sergeysnatkin.intervaltimer.model.WorkoutInterval
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
+import com.sergeysnatkin.intervaltimer.domain.model.WorkoutInterval
 
 fun IntervalTimerResponseDto.toWorkout(): Workout {
     return Workout(

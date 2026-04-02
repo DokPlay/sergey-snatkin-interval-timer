@@ -45,10 +45,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sergeysnatkin.intervaltimer.IntervalTimerUiState
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
+import com.sergeysnatkin.intervaltimer.domain.model.WorkoutInterval
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerSnapshot
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerStatus
-import com.sergeysnatkin.intervaltimer.model.Workout
-import com.sergeysnatkin.intervaltimer.model.WorkoutInterval
 import com.sergeysnatkin.intervaltimer.ui.theme.AppColors
 
 private enum class IntervalVisualState {
@@ -645,18 +645,6 @@ private fun heroSupportingText(
         TimerStatus.Idle -> "Общее время"
         TimerStatus.Completed -> "${formatSeconds(workout.totalTimeSeconds)} из ${formatSeconds(workout.totalTimeSeconds)}"
         else -> "Прошло ${formatMillis(snapshot.elapsedMillis)} из ${formatSeconds(workout.totalTimeSeconds)}"
-    }
-}
-
-private fun intervalsHeader(
-    snapshot: TimerSnapshot,
-    intervalCount: Int,
-    status: TimerStatus,
-): String {
-    return when (status) {
-        TimerStatus.Completed -> "Интервалы $intervalCount из $intervalCount ✓"
-        TimerStatus.Idle -> "Интервалы $intervalCount интервалов"
-        else -> "Интервалы ${snapshot.currentIntervalIndex + 1} из $intervalCount"
     }
 }
 

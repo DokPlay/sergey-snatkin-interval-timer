@@ -12,12 +12,11 @@ import com.sergeysnatkin.intervaltimer.data.AppResult
 import com.sergeysnatkin.intervaltimer.data.WorkoutApiFactory
 import com.sergeysnatkin.intervaltimer.data.WorkoutRepository
 import com.sergeysnatkin.intervaltimer.data.repository.WorkoutRepositoryImpl
-import com.sergeysnatkin.intervaltimer.domain.model.toWorkoutTimer
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
 import com.sergeysnatkin.intervaltimer.domain.timer.IntervalTimerSession
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerSnapshot
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerStatus
 import com.sergeysnatkin.intervaltimer.domain.usecase.IntervalTimerReducer
-import com.sergeysnatkin.intervaltimer.model.Workout
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -175,7 +175,7 @@ class IntervalTimerViewModel(
     }
 
     private fun handleWorkoutLoaded(workout: Workout) {
-        val nextSession = reducer.createSession(workout.toWorkoutTimer())
+        val nextSession = reducer.createSession(workout)
         session = nextSession
         lastSnapshot = null
         _uiState.update {
@@ -226,6 +226,7 @@ class IntervalTimerViewModel(
         val workout = _uiState.value.workout ?: return
 
         if (playSignals) {
+            // Play cues only for real state transitions, not for restored state or a regular tick.
             when {
                 previousSnapshot == null -> Unit
                 snapshot.status == TimerStatus.Completed && previousSnapshot.status != TimerStatus.Completed -> {
@@ -255,12 +256,8 @@ class IntervalTimerViewModel(
     }
 
     private fun restoreUiState(): IntervalTimerUiState {
-        val workout = readString(KEY_WORKOUT_JSON)
-            ?.takeIf(String::isNotBlank)
-            ?.let { json.decodeFromString<Workout>(it) }
-        val status = readString(KEY_TIMER_STATUS)
-            ?.let { enumValueOf<TimerStatus>(it) }
-            ?: TimerStatus.Idle
+        val workout = readStoredWorkout()
+        val status = readStoredTimerStatus()
 
         return IntervalTimerUiState(
             workoutIdInput = readString(KEY_INPUT_ID).orEmpty().ifBlank {
@@ -270,7 +267,7 @@ class IntervalTimerViewModel(
             timerStatus = status,
             timerSnapshot = workout?.let {
                 reducer.calculate(
-                    workout = it.toWorkoutTimer(),
+                    workout = it,
                     status = status,
                     elapsedMillis = readLong(KEY_ACCUMULATED_ELAPSED),
                 )
@@ -282,10 +279,8 @@ class IntervalTimerViewModel(
         if (workout == null) return null
 
         return IntervalTimerSession(
-            workout = workout.toWorkoutTimer(),
-            status = readString(KEY_TIMER_STATUS)
-                ?.let { enumValueOf<TimerStatus>(it) }
-                ?: TimerStatus.Idle,
+            workout = workout,
+            status = readStoredTimerStatus(),
             accumulatedElapsedMillis = readLong(KEY_ACCUMULATED_ELAPSED),
             runningSinceMillis = readNullableLong(KEY_RUNNING_SINCE),
         )
@@ -293,6 +288,7 @@ class IntervalTimerViewModel(
 
     private fun persistState() {
         val state = _uiState.value
+        // SavedStateHandle covers configuration changes, SharedPreferences keeps the timer alive after process death.
         savedStateHandle[KEY_INPUT_ID] = state.workoutIdInput
         savedStateHandle[KEY_WORKOUT_JSON] = state.workout?.let(json::encodeToString)
         savedStateHandle[KEY_TIMER_STATUS] = session?.status?.name
@@ -323,6 +319,22 @@ class IntervalTimerViewModel(
     }
 
     private fun now(): Long = SystemClock.elapsedRealtime()
+
+    private fun readStoredWorkout(): Workout? {
+        val workoutJson = readString(KEY_WORKOUT_JSON)?.takeIf(String::isNotBlank) ?: return null
+        return try {
+            json.decodeFromString<Workout>(workoutJson)
+        } catch (_: IllegalArgumentException) {
+            null
+        } catch (_: SerializationException) {
+            null
+        }
+    }
+
+    private fun readStoredTimerStatus(): TimerStatus {
+        val rawStatus = readString(KEY_TIMER_STATUS) ?: return TimerStatus.Idle
+        return TimerStatus.entries.firstOrNull { it.name == rawStatus } ?: TimerStatus.Idle
+    }
 
     private fun clearPersistedWorkout() {
         preferences.edit().apply {

@@ -1,11 +1,7 @@
 package com.sergeysnatkin.intervaltimer.domain.timer
 
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
 import com.sergeysnatkin.intervaltimer.domain.model.WorkoutInterval
-import com.sergeysnatkin.intervaltimer.domain.model.WorkoutTimer
-
-/**
- * Computed timer snapshot that is safe to render from a ViewModel.
- */
 data class TimerSnapshot(
     val status: TimerStatus,
     val elapsedMillis: Long,
@@ -22,16 +18,13 @@ data class TimerSnapshot(
     val isCompleted: Boolean = status == TimerStatus.Completed
 }
 
-/**
- * Maps an absolute elapsed time to a rendered workout snapshot.
- */
 object TimerSnapshotCalculator {
     fun calculate(
-        workout: WorkoutTimer,
+        workout: Workout,
         status: TimerStatus,
         elapsedMillis: Long,
     ): TimerSnapshot {
-        val clampedElapsed = workout.clampedElapsedMillis(elapsedMillis)
+        val clampedElapsed = workout.clampElapsedMillis(elapsedMillis)
         val total = workout.totalDurationMillis
         val remaining = (total - clampedElapsed).coerceAtLeast(0L)
         val overallProgress = if (total == 0L) 0f else clampedElapsed.toFloat() / total.toFloat()
@@ -53,7 +46,7 @@ object TimerSnapshotCalculator {
     }
 
     private fun findInterval(
-        workout: WorkoutTimer,
+        workout: Workout,
         elapsedMillis: Long,
     ): IntervalInfo {
         var consumed = 0L

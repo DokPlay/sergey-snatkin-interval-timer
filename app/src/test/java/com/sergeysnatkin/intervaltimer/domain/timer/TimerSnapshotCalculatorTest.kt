@@ -1,16 +1,17 @@
 package com.sergeysnatkin.intervaltimer.domain.timer
 
 import com.sergeysnatkin.intervaltimer.domain.model.WorkoutInterval
-import com.sergeysnatkin.intervaltimer.domain.model.WorkoutTimer
+import com.sergeysnatkin.intervaltimer.domain.model.Workout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TimerSnapshotCalculatorTest {
 
-    private val workout = WorkoutTimer(
+    private val workout = Workout(
         id = 68,
         title = "Тест",
+        totalTimeSeconds = 30,
         intervals = listOf(
             WorkoutInterval("Первый", 10),
             WorkoutInterval("Второй", 20),
