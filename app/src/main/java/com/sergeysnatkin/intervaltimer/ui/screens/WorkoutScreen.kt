@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -40,7 +41,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sergeysnatkin.intervaltimer.IntervalTimerUiState
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerSnapshot
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerStatus
@@ -133,7 +136,9 @@ private fun TopBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier
+                .size(40.dp)
+                .border(1.dp, AppColors.Border, CircleShape),
             shape = CircleShape,
             color = Color.White,
             onClick = onOpenLoader,
@@ -147,7 +152,11 @@ private fun TopBar(
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
@@ -155,7 +164,7 @@ private fun TopBar(
             )
             Text(
                 text = trailing,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelMedium,
                 color = AppColors.TextSecondary,
             )
         }
@@ -438,17 +447,18 @@ private fun ControlsBar(
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Pause),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Пауза")
+                        ControlButtonText("Пауза")
                     }
                     OutlinedButton(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
+                            .heightIn(min = 52.dp),
                         onClick = onReset,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.Error),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text("Сбросить")
+                        ControlButtonText("Сбросить тренировку")
                     }
                 }
             }
@@ -462,17 +472,18 @@ private fun ControlsBar(
                         onClick = onStartOrResume,
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Продолжить")
+                        ControlButtonText("Продолжить")
                     }
                     OutlinedButton(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp),
+                            .heightIn(min = 52.dp),
                         onClick = onReset,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.Error),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                     ) {
-                        Text("Сбросить")
+                        ControlButtonText("Сбросить тренировку")
                     }
                 }
             }
@@ -487,7 +498,7 @@ private fun ControlsBar(
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Secondary),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Запустить заново")
+                        ControlButtonText("Запустить заново")
                     }
                     OutlinedButton(
                         modifier = Modifier
@@ -496,12 +507,22 @@ private fun ControlsBar(
                         onClick = onOpenLoader,
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("Новая тренировка")
+                        ControlButtonText("Новая тренировка")
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ControlButtonText(text: String) {
+    Text(
+        text = text,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp),
+    )
 }
 
 private fun topTrailingText(
