@@ -7,6 +7,7 @@ object AppColors {
     val Surface = Color(0xFFFFFFFF)
     val Primary = Color(0xFF1B9E5A)
     val PrimaryTint = Color(0x141B9E5A)
+    val PrimaryTintStrong = Color(0x221B9E5A)
     val Secondary = Color(0xFF3B82F6)
     val SecondaryTint = Color(0x143B82F6)
     val Pause = Color(0xFFE67E22)

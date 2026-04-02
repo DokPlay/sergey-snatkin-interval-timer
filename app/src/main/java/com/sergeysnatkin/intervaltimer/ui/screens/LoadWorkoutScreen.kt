@@ -17,6 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -72,6 +74,17 @@ fun LoadWorkoutScreen(
                 ),
                 keyboardActions = KeyboardActions(onDone = { onLoadWorkout() }),
                 isError = uiState.loadError != null,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppColors.Border,
+                    unfocusedBorderColor = AppColors.Border,
+                    focusedLabelColor = AppColors.TextTertiary,
+                    unfocusedLabelColor = AppColors.TextTertiary,
+                    cursorColor = AppColors.Primary,
+                    focusedTextColor = AppColors.TextPrimary,
+                    unfocusedTextColor = AppColors.TextPrimary,
+                    errorBorderColor = AppColors.Error,
+                    errorLabelColor = AppColors.Error,
+                ),
             )
             if (uiState.loadError != null) {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -82,25 +95,48 @@ fun LoadWorkoutScreen(
                 )
             }
             Spacer(modifier = Modifier.height(20.dp))
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                onClick = onLoadWorkout,
-                enabled = !uiState.isLoading,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) {
-                if (uiState.isLoading) {
+            if (uiState.isLoading) {
+                OutlinedButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    onClick = {},
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, AppColors.Primary),
+                    colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                        containerColor = AppColors.PrimaryTintStrong,
+                        contentColor = AppColors.Primary,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                ) {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .padding(end = 10.dp)
                             .height(18.dp),
                         strokeWidth = 2.dp,
+                        color = AppColors.Primary,
+                    )
+                    Text(
+                        "Загрузка…",
+                        color = AppColors.Primary,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            } else {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    onClick = onLoadWorkout,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text(
+                        if (uiState.loadError != null) "Повторить" else "Загрузить",
+                        style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                     )
                 }
-                Text(if (uiState.isLoading) "Загрузка…" else if (uiState.loadError != null) "Повторить" else "Загрузить")
             }
         }
     }

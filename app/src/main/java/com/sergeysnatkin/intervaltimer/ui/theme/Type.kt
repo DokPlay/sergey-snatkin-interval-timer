@@ -10,8 +10,8 @@ val AppTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Bold,
-        fontSize = 56.sp,
-        lineHeight = 56.sp,
+        fontSize = 68.sp,
+        lineHeight = 68.sp,
     ),
     headlineLarge = TextStyle(
         fontFamily = FontFamily.Default,
@@ -47,6 +47,12 @@ val AppTypography = Typography(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
+        lineHeight = 19.sp,
+    ),
+    bodySmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 13.sp,
         lineHeight = 18.sp,
     ),
     labelMedium = TextStyle(

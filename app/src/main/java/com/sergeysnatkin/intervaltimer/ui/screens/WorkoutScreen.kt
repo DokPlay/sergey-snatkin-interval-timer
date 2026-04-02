@@ -2,6 +2,7 @@ package com.sergeysnatkin.intervaltimer.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +14,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -43,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sergeysnatkin.intervaltimer.IntervalTimerUiState
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerSnapshot
 import com.sergeysnatkin.intervaltimer.domain.timer.TimerStatus
@@ -87,7 +87,7 @@ fun WorkoutScreen(
                 start = 24.dp,
                 top = innerPadding.calculateTopPadding() + 16.dp,
                 end = 24.dp,
-                bottom = innerPadding.calculateBottomPadding() + 16.dp,
+                bottom = innerPadding.calculateBottomPadding() + 132.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
@@ -106,11 +106,7 @@ fun WorkoutScreen(
                 )
             }
             item {
-                Text(
-                    text = intervalsHeader(snapshot, workout.intervals.size, uiState.timerStatus),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = AppColors.TextPrimary,
-                )
+                IntervalsHeader(intervalCount = workout.intervals.size)
             }
             itemsIndexed(workout.intervals) { index, interval ->
                 IntervalRow(
@@ -164,7 +160,7 @@ private fun TopBar(
             )
             Text(
                 text = trailing,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = AppColors.TextSecondary,
             )
         }
@@ -220,7 +216,7 @@ private fun TimerCard(
         Text(
             text = heroTitle(snapshot, status),
             style = MaterialTheme.typography.titleLarge,
-            color = AppColors.TextPrimary,
+            color = if (status == TimerStatus.Idle) AppColors.TextSecondary else AppColors.TextPrimary,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -367,8 +363,12 @@ private fun IntervalRow(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = formatSeconds(interval.timeSeconds),
-                style = MaterialTheme.typography.bodyMedium,
-                color = AppColors.TextPrimary,
+                style = MaterialTheme.typography.labelMedium,
+                color = when {
+                    status != IntervalVisualState.Active -> AppColors.TextSecondary
+                    timerStatus == TimerStatus.Paused -> AppColors.Pause
+                    else -> AppColors.Primary
+                },
             )
         }
     }
@@ -381,11 +381,11 @@ private fun IntervalLeading(
 ) {
     val background = when (status) {
         IntervalVisualState.Upcoming -> AppColors.Background
-        IntervalVisualState.Active -> AppColors.PrimaryTint
+        IntervalVisualState.Active -> AppColors.Primary
         IntervalVisualState.Completed -> AppColors.SecondaryTint
     }
     val foreground = when (status) {
-        IntervalVisualState.Active -> AppColors.Primary
+        IntervalVisualState.Active -> Color.White
         IntervalVisualState.Completed -> AppColors.Secondary
         IntervalVisualState.Upcoming -> AppColors.TextSecondary
     }
@@ -406,6 +406,26 @@ private fun IntervalLeading(
 }
 
 @Composable
+private fun IntervalsHeader(intervalCount: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Интервалы",
+            style = MaterialTheme.typography.titleMedium,
+            color = AppColors.TextPrimary,
+        )
+        Text(
+            text = "$intervalCount интервалов",
+            style = MaterialTheme.typography.bodySmall,
+            color = AppColors.TextTertiary,
+        )
+    }
+}
+
+@Composable
 private fun ControlsBar(
     status: TimerStatus,
     onStartOrResume: () -> Unit,
@@ -413,17 +433,28 @@ private fun ControlsBar(
     onReset: () -> Unit,
     onOpenLoader: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, AppColors.Background),
-                ),
-            )
-            .navigationBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .background(AppColors.Background)
+            .navigationBarsPadding(),
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, AppColors.Background),
+                    ),
+                ),
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppColors.Background)
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+        ) {
         when (status) {
             TimerStatus.Idle -> {
                 Button(
@@ -432,58 +463,77 @@ private fun ControlsBar(
                         .height(52.dp),
                     onClick = onStartOrResume,
                     shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AppColors.Primary,
+                        contentColor = Color.White,
+                    ),
                 ) {
-                    Text("Старт")
+                    ButtonContent(icon = "▶", text = "Старт")
                 }
             }
 
             TimerStatus.Running -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(52.dp),
                         onClick = onPause,
-                        colors = ButtonDefaults.buttonColors(containerColor = AppColors.Pause),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Pause,
+                            contentColor = Color.White,
+                        ),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        ControlButtonText("Пауза")
+                        ButtonContent(icon = "❚❚", text = "Пауза")
                     }
                     OutlinedButton(
                         modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 52.dp),
+                            .fillMaxWidth()
+                            .height(44.dp),
                         onClick = onReset,
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.Error),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        border = BorderStroke(1.5.dp, AppColors.Error.copy(alpha = 0.18f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = AppColors.Error,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     ) {
-                        ControlButtonText("Сбросить тренировку")
+                        ButtonContent(icon = null, text = "Сбросить тренировку", emphasis = AppColors.Error)
                     }
                 }
             }
 
             TimerStatus.Paused -> {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(52.dp),
                         onClick = onStartOrResume,
                         shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Primary,
+                            contentColor = Color.White,
+                        ),
                     ) {
-                        ControlButtonText("Продолжить")
+                        ButtonContent(icon = "▶", text = "Продолжить")
                     }
                     OutlinedButton(
                         modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 52.dp),
+                            .fillMaxWidth()
+                            .height(44.dp),
                         onClick = onReset,
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.Error),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                        border = BorderStroke(1.5.dp, AppColors.Error.copy(alpha = 0.18f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = AppColors.Error,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                     ) {
-                        ControlButtonText("Сбросить тренировку")
+                        ButtonContent(icon = null, text = "Сбросить тренировку", emphasis = AppColors.Error)
                     }
                 }
             }
@@ -498,7 +548,7 @@ private fun ControlsBar(
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.Secondary),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        ControlButtonText("Запустить заново")
+                        ButtonContent(icon = "▶", text = "Запустить заново")
                     }
                     OutlinedButton(
                         modifier = Modifier
@@ -507,22 +557,42 @@ private fun ControlsBar(
                         onClick = onOpenLoader,
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        ControlButtonText("Новая тренировка")
+                        ButtonContent(icon = null, text = "Новая тренировка")
                     }
                 }
             }
+        }
         }
     }
 }
 
 @Composable
-private fun ControlButtonText(text: String) {
-    Text(
-        text = text,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.sp),
-    )
+private fun ButtonContent(
+    icon: String?,
+    text: String,
+    emphasis: Color = Color.Unspecified,
+) {
+    Row(
+        modifier = Modifier.wrapContentWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Text(
+                text = icon,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (emphasis == Color.Unspecified) Color.Unspecified else emphasis,
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+        }
+        Text(
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = if (emphasis == Color.Unspecified) Color.Unspecified else emphasis,
+        )
+    }
 }
 
 private fun topTrailingText(
@@ -592,7 +662,7 @@ private fun intervalsHeader(
 
 private fun intervalVisualState(index: Int, snapshot: TimerSnapshot): IntervalVisualState {
     if (snapshot.status == TimerStatus.Idle) {
-        return IntervalVisualState.Upcoming
+        return if (index == 0) IntervalVisualState.Active else IntervalVisualState.Upcoming
     }
 
     return when {
